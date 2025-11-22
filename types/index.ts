@@ -91,6 +91,8 @@ export interface Task {
   sort_order: number;
   created_at: string;
   updated_at: string;
+  completed?: boolean;
+  created_by?: string;  
 }
 
 export interface CreateTaskInput {
