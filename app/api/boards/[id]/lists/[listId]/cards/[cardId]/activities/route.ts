@@ -1,10 +1,9 @@
-// app/api/boards/[id]/lists/[listId]/cards/[cardId]/route.ts
+// app/api/boards/[id]/lists/[listId]/cards/[cardId]/activities/route.ts
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
-import { logActivity } from '@/lib/activityLogger';
 
-export async function DELETE(
+export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; listId: string; cardId: string }> }
 ) {
@@ -21,7 +20,7 @@ export async function DELETE(
     const { id: boardId, listId, cardId } = await params;
     const supabase = await createClient();
 
-    // Get board
+    // Get board to check access
     const { data: board, error: boardError } = await supabase
       .from('boards')
       .select('organization_id')
@@ -50,35 +49,25 @@ export async function DELETE(
       );
     }
 
-    // Get card info before deletion
-    const { data: card } = await supabase
-      .from('tasks')
-      .select('title')
-      .eq('id', cardId)
-      .single();
+    // Get activities
+    const { data: activities, error: activitiesError } = await supabase
+      .from('task_activities')
+      .select('*')
+      .eq('task_id', cardId)
+      .order('created_at', { ascending: false });
 
-    // Delete card
-    const { error: deleteError } = await supabase
-      .from('tasks')
-      .delete()
-      .eq('id', cardId)
-      .eq('sectional_column_id', listId);
-
-    if (deleteError) {
-      console.error('Supabase error:', deleteError);
+    if (activitiesError) {
+      console.error('Supabase error:', activitiesError);
       return NextResponse.json(
-        { error: 'Failed to delete card' },
+        { error: 'Failed to fetch activities' },
         { status: 500 }
       );
     }
 
-    // Log activity
-    await logActivity(cardId, 'deleted', userId, `Card deleted: "${card?.title}"`);
-
-    return NextResponse.json(
-      { success: true },
-      { status: 200 }
-    );
+    return NextResponse.json({
+      activities,
+      success: true,
+    });
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json(

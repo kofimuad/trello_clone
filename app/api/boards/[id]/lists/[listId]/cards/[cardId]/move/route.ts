@@ -2,6 +2,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activityLogger';
 
 export async function PATCH(
   request: NextRequest,
@@ -51,6 +52,19 @@ export async function PATCH(
       );
     }
 
+    // Get source and target list names
+    const { data: sourceList } = await supabase
+      .from('sectional_columns')
+      .select('title')
+      .eq('id', sourceListId)
+      .single();
+
+    const { data: targetList } = await supabase
+      .from('sectional_columns')
+      .select('title')
+      .eq('id', target_list_id)
+      .single();
+
     // Move card to new list
     const { error: updateError } = await supabase
       .from('tasks')
@@ -65,6 +79,10 @@ export async function PATCH(
         { status: 500 }
       );
     }
+
+    // Log activity
+    const details = `Moved from "${sourceList?.title}" to "${targetList?.title}"`;
+    await logActivity(cardId, 'moved', userId, details);
 
     return NextResponse.json({ success: true });
   } catch (error) {

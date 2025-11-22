@@ -2,6 +2,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import { logActivity } from '@/lib/activityLogger'
 
 export async function POST(
   request: NextRequest,
@@ -79,6 +80,7 @@ export async function POST(
         priority: priority || 'medium',
         due_date: due_date || null,
         sort_order: sortOrder,
+        created_by: userId,
       })
       .select()
       .single();
@@ -90,6 +92,9 @@ export async function POST(
         { status: 500 }
       );
     }
+
+    // Log activity
+    await logActivity(card.id, 'created', userId, `Card created: "${title}"`);
 
     return NextResponse.json(
       {
