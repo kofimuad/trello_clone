@@ -194,14 +194,22 @@ export default function OrganizationDetailPage() {
               Created {new Date(organization.created_at).toLocaleDateString()}
             </p>
           </div>
-          {userRole === 'owner' && (
+          <div className="flex gap-3">
             <button
-              onClick={() => setShowInviteModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
+              onClick={() => router.push(`/org/${orgId}/boards`)}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition"
             >
-              + Invite Members
+              View Boards
             </button>
-          )}
+            {userRole === 'owner' && (
+              <button
+                onClick={() => setShowInviteModal(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition"
+              >
+                + Invite Members
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
