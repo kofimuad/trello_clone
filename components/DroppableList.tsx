@@ -8,7 +8,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import DraggableCard from '@/components/DraggableCard';
+import DraggableCard from './DraggableCard';
 
 interface DroppableListProps {
   list: SectionalColumn & { tasks?: Task[] };
@@ -25,8 +25,20 @@ export default function DroppableList({
   onAddCard,
   onDeleteCard,
 }: DroppableListProps) {
-  const { setNodeRef, transform, transition, isDragging } = useSortable({
+  const {
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+    isOver,
+    attributes,
+    listeners,
+  } = useSortable({
     id: `list-${list.id}`,
+    data: {
+      type: 'List',
+      list,
+    },
   });
 
   const style = {
@@ -39,7 +51,11 @@ export default function DroppableList({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4"
+      {...attributes}
+      {...listeners}
+      className={`flex-shrink-0 w-80 bg-gray-200 rounded-lg p-4 cursor-grab active:cursor-grabbing ${
+        isOver ? 'ring-2 ring-blue-500' : ''
+      }`}
     >
       {/* List Header */}
       <div className="flex justify-between items-center mb-4">

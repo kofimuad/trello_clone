@@ -104,18 +104,27 @@ export default function BoardDetailPage() {
     const overId = over.id as string;
 
     // Check if we're dragging a list
-    if (activeId.startsWith('list-') && overId.startsWith('list-')) {
-      const activeIndex = lists.findIndex(l => `list-${l.id}` === activeId);
-      const overIndex = lists.findIndex(l => `list-${l.id}` === overId);
+    if (activeId.startsWith('list-')) {
+      const activeListId = activeId.replace('list-', '');
+      const overListId = overId.startsWith('list-') 
+        ? overId.replace('list-', '')
+        : overId.startsWith('card-')
+        ? lists.find(l => l.tasks?.some(t => `card-${t.id}` === overId))?.id
+        : null;
 
-      if (activeIndex !== overIndex) {
-        const newLists = arrayMove(lists, activeIndex, overIndex);
-        setLists(newLists);
+      if (overListId && activeListId !== overListId) {
+        const activeIndex = lists.findIndex(l => l.id === activeListId);
+        const overIndex = lists.findIndex(l => l.id === overListId);
 
-        // Update sort order on server
-        newLists.forEach((list, index) => {
-          updateListSortOrder(list.id, index);
-        });
+        if (activeIndex !== -1 && overIndex !== -1) {
+          const newLists = arrayMove(lists, activeIndex, overIndex);
+          setLists(newLists);
+
+          // Update sort order on server
+          newLists.forEach((list, index) => {
+            updateListSortOrder(list.id, index);
+          });
+        }
       }
     }
     // Check if we're dragging a card
