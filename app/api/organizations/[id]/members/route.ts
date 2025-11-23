@@ -1,5 +1,6 @@
 // app/api/organizations/[id]/members/route.ts
 import { auth } from '@clerk/nextjs/server';
+import { clerkClient } from '@clerk/nextjs/server';
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -50,8 +51,32 @@ export async function GET(
       );
     }
 
+    // Fetch user details from Clerk for each member
+    const clerk = await clerkClient();
+    const membersWithDetails = await Promise.all(
+      members.map(async (member) => {
+        try {
+          const user = await clerk.users.getUser(member.user_id);
+          return {
+            ...member,
+            userName: user.firstName && user.lastName 
+              ? `${user.firstName} ${user.lastName}`
+              : user.emailAddresses[0]?.emailAddress || member.user_id,
+            userEmail: user.emailAddresses[0]?.emailAddress,
+          };
+        } catch (err) {
+          // If we can't fetch from Clerk, return the ID
+          return {
+            ...member,
+            userName: member.user_id,
+            userEmail: null,
+          };
+        }
+      })
+    );
+
     return NextResponse.json({
-      members,
+      members: membersWithDetails,
       success: true,
     });
   } catch (error) {

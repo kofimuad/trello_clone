@@ -14,6 +14,8 @@ interface Member {
   user_id: string;
   role: string;
   joined_at: string;
+  userName?: string;
+  userEmail?: string;
 }
 
 export default function OrganizationDetailPage() {
@@ -227,7 +229,10 @@ export default function OrganizationDetailPage() {
                     <div key={member.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium text-gray-900">
-                          {member.user_id}
+                          {member.userName || member.user_id}
+                          {member.userEmail && (
+                            <span className="text-sm text-gray-600 ml-2">({member.userEmail})</span>
+                          )}
                           {member.role === 'owner' && (
                             <span className="ml-2 inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded">
                               Owner
